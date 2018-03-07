@@ -1,5 +1,4 @@
 __pycache__
-db.sqlite3
-settings.py
+settings_secret_key.py
 .idea
 email_authentication
