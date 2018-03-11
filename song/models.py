@@ -5,14 +5,6 @@ from rest_framework.authtoken.models import Token
 from django.conf import settings
 from pdb import set_trace
 
-
-# Whenever a new user is created, a token is also created.
-# @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-# def create_auth_token(sender, instance=None, created=False, **kwargs):
-#     if created:
-#         Token.objects.create(user=instance)
-
-
 album_choice = (
     ('Studio', 'Studio'),
     ('Mini', 'Mini'),
@@ -135,8 +127,10 @@ class SongOwnership(models.Model):
 
     def get_album(self):
         return str(self.song.album)
+
     def get_playtime(self):
         return self.song.playtime
+
     def get_url(self):
         return self.song.url
 

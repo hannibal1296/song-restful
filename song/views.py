@@ -5,6 +5,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.decorators import list_route
 from .pagination import PageNumberFivePagination
 from .throttles import *
+from rest_framework.permissions import IsAuthenticated
 
 
 class ArtistViewSet(viewsets.ReadOnlyModelViewSet):
@@ -28,6 +29,11 @@ class ArtistViewSet(viewsets.ReadOnlyModelViewSet):
     # throttle_classes = [ArtistRateThrottle]
     throttle_scope = 'artist'
 
+    # Only admin can view the list of users.
+    permission_classes = [
+        IsAuthenticated
+    ]
+
 
 # def get_queryset(self):
 #     queryset = super().get_queryset()
@@ -48,6 +54,10 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = ['title', 'artist', ]
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
 
 class SongViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Song.objects.all()
@@ -63,8 +73,16 @@ class SongViewSet(viewsets.ReadOnlyModelViewSet):
     # SongView API's Throttling limit
     throttle_scope = 'song'
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
 class SongOwnershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SongOwnership.objects.all()
     serializer_class = SongOwnershipSerializer
     filter_backends = [SearchFilter]
     search_fields = ['artist', 'song', ]
+
+    permission_classes = [
+        IsAuthenticated
+    ]

@@ -17,7 +17,7 @@ INSTALLED_APPS = [
 
     # Tools
     'rest_framework',
-    # 'rest_framework.authtoken',
+    'rest_framework.authtoken',
     # 'oauth2_provider',
     # 'social_django',
     # 'rest_framework_social_oauth2',
@@ -127,34 +127,22 @@ REST_FRAMEWORK = {
     #     'artist': '3/m',
     #     'album': '1/m',
     # }
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework.authentication.TokenAuthentication',
-    #
-         # 'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-         # 'rest_framework_social_oauth2.authentication.SocialAuthentication',
-    #
-    # ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # )
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
 }
-# FOR SOCIAL LOGIN
-# AUTHENTICATION_BACKENDS = (
-    # Facebook OAuth2
-    # 'social_core.backends.facebook.FacebookAppOAuth2',
-    # 'social_core.backends.facebook.FacebookOAuth2',
 
-    # django-rest-framework-social-oauth2
-    # 'rest_framework_social_oauth2.backends.DjangoOAuth2',
-
-    # Django
-    # 'django.contrib.auth.backends.ModelBackend',
-# )
+# To switch from username to email
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
 
 # FOR TOKEN AUTHENTICATION, Test this (with single quotes and capital letters):
 # http GET 127.0.0.1:8000/whatever 'Authorization: Token your_token_value'
 # token key: 97eaf278918ce26fd07068c4da9fac8f0be7ec25
-
 
 # FOR Cross Origin Resource Sharing (CORS)
 CORS_ORIGIN_WHITELIST = (

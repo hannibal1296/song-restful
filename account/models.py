@@ -1,17 +1,30 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.contrib.auth.hashers import make_password
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from rest_framework.authtoken.models import Token
+from django.conf import settings
+from pdb import set_trace
+
+
+# Whenever a new user is created, a token is also created.
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
 
 class AccountManager(BaseUserManager):
     def create_user(self, email, username, password=None):
         if not email:
             raise ValueError('Email Error')
+        print("Creating a user in AccountManager.")
         user = self.model(
             email=self.normalize_email(email),
             username=username,
         )
         user.set_password(password)
-        print("It worked.")
+        print("Saving a user in AccountManager")
         user.save(using=self._db)
         return user
 
@@ -27,6 +40,7 @@ class Account(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True)
 
     email_authenticated = models.BooleanField(default=False, help_text='이메일 인증을 했나요?')
+    is_active = models.BooleanField(default=True, help_text="Is this user account activated?")
     is_admin = models.BooleanField(default=False)
     objects = AccountManager()
 
@@ -37,7 +51,7 @@ class Account(AbstractBaseUser):
         return self.username
 
     def __str__(self):
-        return self.username
+        return self.email
 
     @property
     def is_staff(self):

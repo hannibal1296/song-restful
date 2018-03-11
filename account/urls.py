@@ -3,7 +3,8 @@ from . import views
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'list', views.AccountViewSet, 'list')
+router.register(r'account-list', views.AccountViewSet, 'account-list')
+router.register(r'token-list', views.TokenViewSet, 'token-list')
 
 # 127.0.0.1:8000/account/
 urlpatterns = [

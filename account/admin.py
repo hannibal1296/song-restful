@@ -4,14 +4,19 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from .models import Account
+from rest_framework.authtoken.admin import TokenAdmin
+from rest_framework.authtoken.models import Token
 
 from pdb import set_trace
+
 
 # Register your models here.
 # admin.site.register(Account)
 
 class AccountCreationForm(forms.ModelForm):
     # A form for creating new users. It includes all the required fields, plus a repeated password.
+    # email = forms.EmailField(max_length=255)
+    email = forms.EmailField(label="Email", widget=forms.EmailInput)
     pw1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     pw2 = forms.CharField(label='Password Confirmation', widget=forms.PasswordInput)
 
@@ -28,10 +33,12 @@ class AccountCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)  # "commit=False" means 최종 저장은 나중에
+        user.email = self.cleaned_data['email']
         user.set_password(self.cleaned_data['pw1'])  # cleaned_data: result of the validation
         if commit:
             user.save()
         return user
+
 
 class AccountChangeForm(forms.ModelForm):
     pw = ReadOnlyPasswordHashField()
@@ -44,25 +51,26 @@ class AccountChangeForm(forms.ModelForm):
         print("worked at line 44")
         return self.initial['pw']
 
+
 class AccountAdmin(BaseUserAdmin):
     form = AccountChangeForm
     add_form = AccountCreationForm
 
     list_display = ('email', 'username', 'is_admin',)
-    list_filter = ('is_admin', )
-    search_fields = ('email', 'username', )
+    list_filter = ('is_admin',)
+    search_fields = ('email', 'username',)
 
     fieldsets = [
         # Shouldn't change these field names
         # (None, {'fields': ('email', 'password')}),
         (
             'Account Info',
-            {'fields': ('email', )}  # Hide the password
+            {'fields': ('email',)}  # Hide the password
             # {'fields': ('email', 'password',)}
         ),
         (
             'Personal Info',
-            {'fields': ('username', )}
+            {'fields': ('username',)}
         ),
         (
             'Permissions',
@@ -74,7 +82,7 @@ class AccountAdmin(BaseUserAdmin):
         (
             None,
             {
-                'classes': ('wide', ),
+                'classes': ('wide',),
                 'fields': ('email', 'username', 'pw1', 'pw2'),
             }
         ),
@@ -82,10 +90,23 @@ class AccountAdmin(BaseUserAdmin):
     ordering = ('email',)
     filter_horizontal = ()
 
+
+class CustomTokenAdmin(TokenAdmin):
+    list_display = ('key', 'email', 'created')
+    fields = ('key', 'user',)
+    ordering = ('-created',)
+
+    def email(self, obj):
+        return str(obj.user.email)
+
+
+
 admin.site.register(Account, AccountAdmin)
 
 # unregister the Group model from admin.
 admin.site.unregister(Group)
+admin.site.unregister(Token)
+admin.site.register(Token, CustomTokenAdmin)
 
 # @admin.register(Account)
 # class ClassAdmin(admin.ModelAdmin):

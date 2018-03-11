@@ -30,4 +30,4 @@ class SongOwnershipSerializer(ModelSerializer):
     class Meta:
         model = SongOwnership
         fields = "__all__"
-        depth = 2
+        depth = 1

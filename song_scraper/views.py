@@ -281,7 +281,6 @@ def save_song(song_url, track_num=1):
         elif cut_string(info_row.find('th').get_text()) == "재생 시간":
             playtime = cut_string(info_row.find('time').get_text())
 
-
     lyric_container = song_detail_soup.find('div', class_='lyricsContainer')
     try:
         lyric = lyric_container.find('xmp').get_text()
@@ -294,14 +293,34 @@ def save_song(song_url, track_num=1):
         artist_objs = []
         for each in artist_names:
             artist_objs.append(Artist.objects.get(kname=each))
+    except:
+        print('Failed to get the artist, ' + each + ' object.')
+        return
+
+    try:
         album_obj = Album.objects.get(title=album_title)
+    except:
+        print('Failed to get the album, ' + album_title + ' object.')
+        return
+
+    try:
         song_obj = Song.objects.create(title=song_title, album=album_obj, track_num=track_num,
                                        playtime=playtime, lyrics=lyric, url=youtube_url)
         song_obj.save()
+    except IntegrityError:
+        print('The song, ' + song_title + ' object already exists.')
+        return
+    except:
+        print('Failed to save the song, ' + song_title + ' object.')
+
+    try:
         for each in artist_objs:
             SongOwnership(artist=each, song=song_obj).save()
+    except IntegrityError:
+        print('The ownership between ' + str(song_obj) + ' and ' + str(each) + ' object already exists.')
+        return
     except:
-        print("Error occured at artist_obj, album_obj, or song_obj.")
+        print('Failed to save ' + str(each) + " and " + str(song_obj) + " ownership.")
 
 
 # 앨범 페이지에 존재하는 노래들을 전부 긁어서 저장한다.
@@ -325,12 +344,11 @@ def save_songs(album_url):
 
 # 완성
 def save_album(album_url):
-
     album_page = requests.get(album_url)
     album_soup = BeautifulSoup(album_page.content, 'html.parser')
     album_target = album_soup.find('table', class_='info')
     artists = album_target.find('tr').find_all('a')
-    if artists == []: # Various Artists 의 경우
+    if artists == []:  # Various Artists 의 경우
         artists = [album_target.find('tr').find('td')]
 
     artists_names = []
@@ -342,7 +360,6 @@ def save_album(album_url):
         for i in range(len(artists_names)):
             if not Artist.objects.filter(kname=artists_names[i]).exists():
                 save_artist(artists[i]['href'])
-
 
         artist_kname = "Various Artists"
     else:
@@ -405,6 +422,5 @@ def save_top100(request):
         album_urls.append(each['href'])
     for album_url in album_urls:
         save_album(album_url)
-
 
     return redirect('/song/')
