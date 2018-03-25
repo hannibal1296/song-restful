@@ -1,1 +1,1 @@
-youtube_dev_key = 'AIzaSyBAHnqW6Pq-iPDgKxU5q8McH6qj7bKb-o8'
+youtube_dev_key = 'AIzaSyBTQIszsq8vjjvi2B8kMFgKdI670DJr-ZU'

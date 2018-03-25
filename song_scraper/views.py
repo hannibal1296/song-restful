@@ -99,107 +99,19 @@ def get_youtube_url(artist, title):
         return None
 
 
-def save_album_song(album_soup):
-    album_target = album_soup.find('table', class_='info')
-    song_target = album_soup.find('table', class_='trackList')
-
-    # ALBUM
-    title = album_soup.find_all('div', class_='innerContainer')[1].find('h1').get_text()
-    rows = album_target.find_all('tr')
-
-    album_artists = album_type = genre = style = company = distributor = playtime = None
-    release_date = ""
-    for row in rows:
-        if row.find('th').get_text() == "아티스트":
-            album_artists = row.find_all('a')
-            if album_artists:
-                for i in range(len(album_artists)):
-                    album_artists[i] = cut_string(album_artists[i].get_text())
-            else:
-                album_artists = [cut_string(row.find('td').get_text())]
-        elif row.find('th').get_text() == "앨범 종류":
-            album_type = row.find('td').get_text()
-        elif row.find('th').get_text() == "발매일":
-            _release_date = row.find('time').get_text()
-            _release_date = _release_date.split('.')
-            if len(_release_date) == 2:
-                _release_date.append('01')
-            release_date = '-'.join(_release_date)
-        elif row.find('th').get_text() == "장르":
-            genre = row.find('a').get_text()
-        # elif row.find('th').get_text() == "스타일":
-        #     style = row.find('a').get_text()
-        # elif row.find('th').get_text() == "기획사":
-        #     company = row.find('td').get_text()
-        # elif row.find('th').get_text() == "유통사":
-        #     distributor = row.find('td').get_text()
-        # elif row.find('th').get_text() == "재생시간":
-        #     playtime = row.find('time').get_text()
-        else:
-            continue
-
-    # if 'Various Artists' in album_artists:
-    #     print("Various Artists")
-    #     return
-    # One Artist
-    if len(album_artists) == 1:
-        try:
-            artist = Artist.objects.get(name=album_artists[0])
-            # Album exists
-            if not Album.objects.filter(artist=artist, title=title, release_date=release_date).exists():
-                album = Album.objects.create(artist=artist, title=title, type=album_type, release_date=release_date)
-                album.save()
-            # Album doesn't exist.
-            else:
-                pass
-        except:
-            print(album_artists[0] + " doesn't exist.")
-
-    # e.g.  https://music.bugs.co.kr/album/699412?wl_ref=list_tr_11_chart
-    else:  # Several artists
-        for _artist in album_artists:
-            artist = Artist.objects.get(name=_artist)
-
-            # Album doesn't exist.
-            if not Album.objects.filter(title=title, type=album_type, release_date=release_date).exists():
-                album = Album.objects.create(artist=artist, title=title, type=album_type, release_date=release_date)
-                album.save()
-
-            # Album already exists.
-            else:
-                album = Album.objects.get(artist=artist, type=album_type, release_date=release_date)
-                if artist not in album.artist.all():
-                    album.artist.add(artist)
-                    album.save()
-
-    # SONG
-    song_titles = song_target.find_all('p', class_="title")
-    track_nums = song_target.find_all('p', class_="trackIndex")
-
-    album = Album.objects.get(album_title=title, album_type=album_type, album_release=release_date)
-    artists = album.artist.all()
-    str_artists = ' '.join([str(each) for each in artists])
-    for i in range(len(track_nums)):
-        if Song.objects.filter(title=cut_string(song_titles[i].get_text()), album=album).exists():
-            pass
-        else:
-            song_title = cut_string(song_titles[i].get_text())
-            y_url = get_youtube_url(str_artists, song_title)
-            if not y_url:
-                y_url = None
-            song = Song.objects.create(title=song_title, album=album, track_num=track_nums[i].find('em').get_text(),
-                                       url=y_url)
-            song.save()
-
-
 # 완성
 def save_artist(artist_url, belong_to_group=False, group_name=None):
     artist_page = requests.get(artist_url)
     artist_soup = BeautifulSoup(artist_page.content, 'html.parser')
     artist_target = artist_soup.find('table', class_="info")
-    artist_rows = artist_target.find_all('tr')
-    name_artist = artist_soup.find_all('div', class_='innerContainer')[1].find('h1').get_text()
+
+    name_artist = cut_string(artist_soup.find_all('div', class_='innerContainer')[1].find('h1').find(text=True))
     ename = extract_ename(name_artist)
+    try:
+        artist_rows = artist_target.find_all('tr')
+    except:
+        print("There's no information about " + name_artist)
+        return
 
     if Artist.objects.filter(kname=name_artist).exists():
         print(name_artist + " already exists.")
@@ -261,21 +173,26 @@ def save_artist(artist_url, belong_to_group=False, group_name=None):
     print("Artist " + name_artist + " object has been created!")
 
 
+def save_artist_from_song(container):
+    info_rows = container.find_all('tr')[0].find_all('a')
+    for row in info_rows:
+        save_artist(row['href'])
+
+
 # 곡 디테일 페이지에 들어가서 정보를 긁어와 저장한다.
 def save_song(song_url, track_num=1):
     song_detail_page = requests.get(song_url)
     song_detail_soup = BeautifulSoup(song_detail_page.content, 'html.parser')
     song_title = cut_string(song_detail_soup.find_all('div', class_='innerContainer')[1].find('h1').get_text())
-
     container = song_detail_soup.find('table', class_='info')
 
     info_rows = container.find_all('tr')
     for info_row in info_rows:
-        if cut_string(info_row.find('th').get_text()) == "아티스트":
+        if cut_string(info_row.find('th').find(text=True)) == "아티스트":
             artists = info_row.find_all('a')
             artist_names = []
             for i in range(len(artists)):
-                artist_names.append(cut_string(artists[i].get_text()))
+                artist_names.append(cut_string(artists[i].find(text=True)))
 
         elif cut_string(info_row.find('th').get_text()) == "앨범":
             album_title = cut_string(info_row.find('a').get_text())
@@ -288,14 +205,12 @@ def save_song(song_url, track_num=1):
     except:
         lyric = None
 
-    youtube_url = get_youtube_url(" ".join(artist_names), song_title)
-
     try:
         artist_objs = []
         for each in artist_names:
             artist_objs.append(Artist.objects.get(kname=each))
     except:
-        print('Failed to get the artist, ' + each + ' object.')
+        save_artist_from_song(container)
         return
 
     try:
@@ -305,6 +220,7 @@ def save_song(song_url, track_num=1):
         return
 
     try:
+        youtube_url = get_youtube_url(" ".join(artist_names), song_title)
         song_obj = Song.objects.create(title=song_title, album=album_obj, track_num=track_num,
                                        playtime=playtime, lyrics=lyric, url=youtube_url)
         song_obj.save()
@@ -313,6 +229,7 @@ def save_song(song_url, track_num=1):
         return
     except:
         print('Failed to save the song, ' + song_title + ' object.')
+        return
 
     try:
         for each in artist_objs:
@@ -322,25 +239,6 @@ def save_song(song_url, track_num=1):
         return
     except:
         print('Failed to save ' + str(each) + " and " + str(song_obj) + " ownership.")
-
-
-# 앨범 페이지에 존재하는 노래들을 전부 긁어서 저장한다.
-def save_songs(album_url):
-    album_page = requests.get(album_url)
-    album_soup = BeautifulSoup(album_page.content, 'html.parser')
-    album_target = album_soup.find('table', class_='info')
-
-    temp_container = album_soup.find_all('tbody')
-    song_info_container = temp_container[1]
-    song_rows = song_info_container.find_all('tr')
-
-    for song_row in song_rows:
-        # 웹페이지 접속하기 전에 먼저 객체가 존재하는지 체크
-        # song_title = cut_string(song_row.find('p', class_='title').find('a').get_text())
-        # if Song.objects.
-
-        song_detail_url = song_row.find('a', class_='trackInfo')['href']
-        save_song(song_detail_url)
 
 
 # 완성
@@ -354,9 +252,13 @@ def save_album(album_url):
 
     artists_names = []
     for artist in artists:
-        artists_names.append(cut_string(artist.get_text()))
+        artists_names.append(cut_string(artist.find(text=True)))
+
+        # artists_names.append(cut_string(artist.get_text()))
+        # set_trace()
 
     artist_kname = None
+    artist_obj = None
     if len(artists_names) > 1:
         for i in range(len(artists_names)):
             if not Artist.objects.filter(kname=artists_names[i]).exists():
@@ -419,8 +321,15 @@ def save_top100(request):
 
     album_urls = []
     album_list = album_target.find_all('a', class_="album")
+
+    album_title_obj_list = Album.objects.all()
+    album_title_list = []
+    for each_album in album_title_obj_list:
+        album_title_list.append(each_album.title)
     for each in album_list:
-        album_urls.append(each['href'])
+        # 존재하는 앨범은 생략
+        if each.find(text=True) not in album_title_list:
+            album_urls.append(each['href'])
     for album_url in album_urls:
         save_album(album_url)
 

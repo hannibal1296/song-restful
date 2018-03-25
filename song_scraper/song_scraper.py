@@ -44,8 +44,6 @@ class BugsAlbumSpider(scrapy.Spider):
         else:
             ttype = 'Unknown'
 
-        # set_trace()  # todo
-
         album = {
             'title': title,
             'artist': name,
