@@ -6,6 +6,7 @@ from pdb import set_trace
 from datetime import date
 from bs4 import BeautifulSoup
 import requests, html5lib
+from .youtube_dev_key import youtube_dev_key
 
 # YOUTUBE API ##############################################
 import argparse
@@ -81,7 +82,7 @@ def add_ename(request):
 
 
 def get_youtube_url(artist, title):
-    DEVELOPER_KEY = 'AIzaSyBAHnqW6Pq-iPDgKxU5q8McH6qj7bKb-o8'
+    DEVELOPER_KEY = youtube_dev_key
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
                     developerKey=DEVELOPER_KEY)
     search_response = youtube.search().list(

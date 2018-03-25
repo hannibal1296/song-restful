@@ -5,7 +5,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.decorators import list_route
 from .pagination import PageNumberFivePagination
 from .throttles import *
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class ArtistViewSet(viewsets.ReadOnlyModelViewSet):
@@ -52,7 +52,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     # throttle_classes = [AlbumRateThrottle]
     throttle_scope = 'album'
     filter_backends = [SearchFilter]
-    search_fields = ['title', 'artist', ]
+    search_fields = ['title',]
 
     permission_classes = [
         IsAuthenticated
@@ -63,7 +63,7 @@ class SongViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Song.objects.all()
     serializer_class = SongSerializer
     filter_backends = [SearchFilter]  # 어떤 기능을 추가하는가
-    search_fields = ['title', 'artist__name']  # 어떤 필드의 검색을 지원할 것인가
+    search_fields = ['title', ]  # 어떤 필드의 검색을 지원할 것인가
     # 외래키모델__외래필드 의 포맷으로 검색 가능.
 
     pagination_class = PageNumberFivePagination
@@ -74,15 +74,17 @@ class SongViewSet(viewsets.ReadOnlyModelViewSet):
     throttle_scope = 'song'
 
     permission_classes = [
-        IsAuthenticated
+        # IsAuthenticated
+        AllowAny
     ]
 
 class SongOwnershipViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SongOwnership.objects.all()
     serializer_class = SongOwnershipSerializer
     filter_backends = [SearchFilter]
-    search_fields = ['artist', 'song', ]
+    search_fields = ['song__title']
 
     permission_classes = [
-        IsAuthenticated
+        # IsAuthenticated
+        AllowAny
     ]

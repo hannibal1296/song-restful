@@ -64,7 +64,7 @@ class Artist(models.Model):
 
 class Album(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
-    title = models.CharField(max_length=50, verbose_name="Album")
+    title = models.CharField(max_length=80, verbose_name="Album")
     type = models.CharField(max_length=20)
     release_date = models.DateField()
     description = models.TextField(null=True, blank=True)

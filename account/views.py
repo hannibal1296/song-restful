@@ -12,8 +12,8 @@ class AccountViewSet(viewsets.ModelViewSet):
 
     # Only admin can view the list of users.
     permission_classes = [
-        # IsAdminUser
-        AllowAny
+        IsAdminUser
+        # AllowAny
     ]
 
 class TokenViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,6 +21,6 @@ class TokenViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AuthTokenSerializer
 
     permission_classes = [
-        # IsAdminUser
-        AllowAny
+        IsAdminUser
+        # AllowAny
     ]

@@ -11,7 +11,7 @@ router.register(r'artist', views.ArtistViewSet)
 router.register(r'album', views.AlbumViewSet)
 router.register(r'songownership', views.SongOwnershipViewSet)
 
-
+# 8000/~
 urlpatterns = [
     path('', include(router.urls)),
     path('get-auth-token/', drf_views.obtain_auth_token, name='get_auth_token'),
