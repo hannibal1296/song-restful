@@ -140,7 +140,7 @@ def save_artist(artist_url, belong_to_group=False, group_name=None):
             continue
     # Artist doesn't exist.
     if not Artist.objects.filter(kname=name_artist).exists():
-        # 저장할 아티스트가 그룹에 속해있는 경
+        # 저장할 아티스트가 그룹에 속해있는 경우
         if belong_to_group:
             try:
                 group_obj = Artist.objects.get(kname=group_name)
@@ -323,13 +323,17 @@ def save_top100(request):
     album_list = album_target.find_all('a', class_="album")
 
     album_title_obj_list = Album.objects.all()
-    album_title_list = []
+    album_title_list = []  # 현재 데이터베이스에 존재하는 앨범 이름 리스트
     for each_album in album_title_obj_list:
         album_title_list.append(each_album.title)
+
+
     for each in album_list:
-        # 존재하는 앨범은 생략
-        if each.find(text=True) not in album_title_list:
+        album_title = each.find(text=True)
+        # 앨범 존재 안함
+        if not Album.objects.filter(title=album_title).exists():
             album_urls.append(each['href'])
+
     for album_url in album_urls:
         save_album(album_url)
 
